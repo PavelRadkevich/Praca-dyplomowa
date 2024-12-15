@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praca Dyplomowa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+    <!-- Nagłówek -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="header">Praca dyplomowa</h1>
+        </div>
+    </div>
+
+    <!-- # TODO: wypadające listy -->
+    <div class="container mt-3">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="box">
+                    <label for="company" class="form-label">Wybierz spółkę:</label>
+                    <select class="form-select" id="company">
+                        <option>Apple</option>
+                        <option>Microsoft</option>
+                        <option>Google</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="box">
+                    <label for="dateRange" class="form-label">Zakres dat:</label>
+                    <div class="d-flex gap-2">
+                        <select class="form-select">
+                            <option>2012</option>
+                            <option>2013</option>
+                            <option>2014</option>
+                        </select>
+                        <select class="form-select">
+                            <option>2014</option>
+                            <option>2015</option>
+                            <option>2016</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="box">
+                    <label for="parameters" class="form-label">Wybierz parametry:</label>
+                    <input type="text" class="form-control" placeholder="Rating, zadłużenie, EBITDA">
+                </div>
+            </div>
+        </div>
+
+        <div class="container d-flex justify-content-center my-4">
+            <button class="btn btn-warning btn-lg">Generuj</button>
+        </div>
+
+        <!-- Вероятности и ROC-AUC -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="box text-center">
+                    <h5>Prawdopodobieństwo 30 dni:</h5>
+                    <div class="stat-number">...</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="box text-center">
+                    <h5>Prawdopodobieństwo 60 dni:</h5>
+                    <div class="stat-number">...</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="box text-center">
+                    <h5>Prawdopodobieństwo 90 dni:</h5>
+                    <div class="stat-number">...</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="box">
+                    <h5>Title</h5>
+                    <p>Accuracy: ...</p>
+                    <p>Precision: ...</p>
+                    <p>Recall: ...</p>
+                    <p>F1: ...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- График и таблица -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="box">
+                    <h5>ROC-AUC</h5>
+                    <img src="https://via.placeholder.com/450x250" alt="ROC-AUC" class="img-fluid">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="box">
+                    <h5>Ilość spółek wypłacających dywidendy</h5>
+                    <img src="https://via.placeholder.com/450x250" alt="Dividends Chart" class="img-fluid">
+                </div>
+            </div>
+        </div>
+
+        <!-- Календарь выплат -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="box">
+                    <h5>Kalendarz wypłat</h5>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Spółka</th>
+                                <th>Aktualna stopa dywidendy</th>
+                                <th>Ostatni dzień z prawem na dywidendy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ARCTIC</td>
+                                <td>5.2%</td>
+                                <td>10.06.2024</td>
+                            </tr>
+                            <tr>
+                                <td>DGA</td>
+                                <td>1.2%</td>
+                                <td>10.06.2024</td>
+                            </tr>
+                            <tr>
+                                <td>ASSECOSE</td>
+                                <td>10.4%</td>
+                                <td>11.06.2024</td>
+                            </tr>
+                            <tr>
+                                <td>NEUCA</td>
+                                <td>5.1%</td>
+                                <td>11.06.2024</td>
+                            </tr>
+                            <tr>
+                                <td>ASBIS</td>
+                                <td>4.1%</td>
+                                <td>13.06.2024</td>
+                            </tr>
+                            <tr>
+                                <td>DEVELIA</td>
+                                <td>9.4%</td>
+                                <td>13.06.2024</td>
+                            </tr>
+                            <tr>
+                                <td>QUERCUS</td>
+                                <td>7.1%</td>
+                                <td>14.06.2024</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключение Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

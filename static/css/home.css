@@ -1,0 +1,35 @@
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+}
+
+.box {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: green;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+h5 {
+    margin-bottom: 10px;
+}
