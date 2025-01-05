@@ -4,18 +4,44 @@ from flask import Blueprint, render_template, jsonify
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
-
 home_bp = Blueprint('home', __name__, template_folder='../../templates')
+FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY")
+ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
 
 @home_bp.route('/')
 def home():
     return render_template('home.html', title="Praca Dyplomowa",
-                           dividendsCalendarCompanies=getNearestCompanies(),
-                           allCompanies=getAllCompanies())
+                           dividendsCalendarCompanies=get_nearest_companies(),
+                           allCompanies=get_all_companies())
 
 
-def getNearestCompanies():
+@home_bp.route('/api/get_company_years/<symbol>', methods=['GET'])
+def get_company_years(symbol):
+    try:
+        url = f'https://www.alphavantage.co/query'
+        params = {
+            'function': 'TIME_SERIES_DAILY',
+            'symbol': symbol,
+            'outputsize': 'full',
+            'apikey': ALPHA_VANTAGE_KEY
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if 'Time Series (Daily)' not in data:
+            return jsonify({'error': 'No data available for this company'})
+
+        dates = list(data['Time Series (Daily)'].keys())
+        years = sorted(set(date.split('-')[0] for date in dates))
+
+        return jsonify({'years': years})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def get_nearest_companies():
     url = "https://www.investing.com/dividends-calendar/"
     headers = {'User-Agent': 'Mozilla/5.0'}
     response = requests.get(url, headers=headers)
@@ -41,10 +67,10 @@ def getNearestCompanies():
         print("Nie znaleziono")
     return companies
 
-def getAllCompanies():
-    FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY")
+
+def get_all_companies():
     print(FINNHUB_KEY)
-    url =f'https://finnhub.io/api/v1/stock/symbol?exchange=US&token={FINNHUB_KEY}' # Get all companies from US stock
+    url = f'https://finnhub.io/api/v1/stock/symbol?exchange=US&token={FINNHUB_KEY}'  # Get all companies from US stock
     # markets (we can change country ..exchange=US..)
     response = requests.get(url)
     print(response.json)
