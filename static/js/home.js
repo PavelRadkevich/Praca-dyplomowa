@@ -3,23 +3,23 @@ $(document).ready(function () {
         const companySymbol = $(this).val();
         if (!companySymbol) return;
 
-        // Очистка и выключение полей выбора года перед запросом
+        // Clearing and disabling year selection fields before querying
         $('#startYear, #endYear').empty().append('<option value="" selected disabled>Загрузка...</option>').prop('disabled', true);
 
-        // Отправляем запрос на сервер
+        // Sending the request to the server
         $.ajax({
             url: `/api/get_company_years/${companySymbol}`,
             method: 'GET',
             success: function (response) {
                 const years = response.years;
 
-                // Заполняем поля годов
-                $('#startYear, #endYear').empty().append('<option value="" selected disabled>Выберите год</option>');
+                // Fill in the year fields
+                $('#startYear, #endYear').empty().append('<option value="" selected disabled>Wybierz rok</option>');
                 years.forEach(year => {
                     $('#startYear, #endYear').append(`<option value="${year}">${year}</option>`);
                 });
 
-                // Включаем выбор дат
+                // Enable date selection
                 $('#startYear, #endYear').prop('disabled', false);
             },
             error: function () {
@@ -28,4 +28,39 @@ $(document).ready(function () {
             }
         });
     });
+
+    $('#generateButton').on('click', function () {
+        //Collecting all data about company from fields
+        const selectedCompany = $('#companySelect').val();
+        const startYear = $('#startYear').val();
+        const endYear = $('#endYear').val();
+        const selectedParametres = $('#parameters').val();
+
+        if (selectedCompany == null || startYear == null || endYear == null || selectedParametres == null) {
+            alert ('Wypełnij wszystkie pola');
+            return;
+        }
+
+        const requestData = {
+            company: selectedCompany,
+            startYear: startYear,
+            endYear: endYear,
+            parameters: selectedParametres
+        }
+
+        $.ajax({
+            url: '/predict',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function (response){
+                alert('Otrzymano odpowiedz od serwera: ' + response);
+            },
+            error: function (error) {
+                console.error('Error: ' + error);
+                alert('Podczas przetwarzania danych wystąpił błąd. Opis: ' + error);
+            }
+        })
+
+    })
 });

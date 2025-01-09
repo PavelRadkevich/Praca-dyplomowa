@@ -50,13 +50,19 @@
             <div class="col-md-4">
                 <div class="box">
                     <label for="parameters" class="form-label">Wybierz parametry:</label>
-                    <input type="text" class="form-control" placeholder="Rating, zadłużenie, EBITDA">
+                    <select id="parameters" class="form-select" multiple="multiple">
+                        <option value="EBITDA">EBITDA</option>
+                        <option value="zadluzenie">Zadłużenie</option>
+                        <option value="rating">Rating</option>
+                        <option value="przychody">Przychody</option>
+                        <option value="zysk">Zysk</option>
+                    </select>
                 </div>
             </div>
         </div>
 
         <div class="container d-flex justify-content-center my-4">
-            <button class="btn btn-warning btn-lg">Generuj</button>
+            <button class="btn btn-warning btn-lg" id="generateButton">Generuj</button>
         </div>
 
         <!-- Probabilities and ROC-AUC -->
@@ -142,6 +148,10 @@
                 placeholder: 'Wybierz spółkę',
                 allowClear: true
             });
+            $('#parameters').select2({
+            placeholder: 'Wybierz parametry',
+            allowClear: true
+        });
         });
     </script>
 </body>
