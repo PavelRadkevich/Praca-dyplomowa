@@ -4,6 +4,8 @@ from flask import Blueprint, render_template, jsonify
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
+from apps.predict import api_requests
+
 home_bp = Blueprint('home', __name__, template_folder='../../templates')
 FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY")
 ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
@@ -11,6 +13,7 @@ ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
 @home_bp.route('/')
 def home():
+    api_requests.get_ebitda("AAPL", 2010, 2020)
     return render_template('home.html', title="Praca Dyplomowa",
                            dividendsCalendarCompanies=get_nearest_companies(),
                            allCompanies=get_all_companies())
@@ -69,11 +72,9 @@ def get_nearest_companies():
 
 
 def get_all_companies():
-    print(FINNHUB_KEY)
     url = f'https://finnhub.io/api/v1/stock/symbol?exchange=US&token={FINNHUB_KEY}'  # Get all companies from US stock
     # markets (we can change country ..exchange=US..)
     response = requests.get(url)
-    print(response.json)
     if response.status_code == 200:
         companies = response.json()
         result = []
