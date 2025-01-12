@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, jsonify, request
 
 predict_bp = Blueprint('predict', __name__)
@@ -9,7 +11,7 @@ def predict():
         data = request.get_json()
         company = data['company']
         start_year = data['startYear']
-        end_year = data['endYear']
+        end_year = datetime.now().year
         parameters = data['parameters']
 
         return jsonify({"Hello": 'hello'}), 200
