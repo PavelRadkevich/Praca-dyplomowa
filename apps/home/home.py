@@ -13,7 +13,8 @@ ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
 @home_bp.route('/')
 def home():
-    api_requests.get_ebitda("IBM", 2010)
+    stock_prices, trading_days = api_requests.get_stock_prices("IBM", 2000)
+    api_requests.get_dividends("IBM", 2000, trading_days)
     return render_template('home.html', title="Praca Dyplomowa",
                            dividendsCalendarCompanies=get_nearest_companies(),
                            allCompanies=get_all_companies())

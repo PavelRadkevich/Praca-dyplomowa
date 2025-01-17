@@ -13,8 +13,10 @@ def predict():
         start_year = data['startYear']
         end_year = datetime.now().year
         parameters = data['parameters']
+        trading_days = None  # Assign a value for this variable after getting stock prices
 
         return jsonify({"Hello": 'hello'}), 200
     except Exception as e:
         print(f"Error processing data: {e}")
         return jsonify({"error": "Failed to process data"}), 500
+
