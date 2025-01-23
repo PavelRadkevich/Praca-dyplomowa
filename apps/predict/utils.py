@@ -13,8 +13,18 @@ def get_quarterly_data_from_alpha_vantage(symbol, start_year, function_name, ALP
     """
     url = f'https://www.alphavantage.co/query?function={function_name}&symbol={symbol}&apikey={ALPHA_VANTAGE_KEY}'
     response = requests.get(url)
-    quarterly_reports = response.json()['quarterlyReports']
+    response_json = response.json()
 
+    name_of_reports = 'quarterlyReports'
+
+    # Check if the 'quarterlyReports' key is in the response.
+    if 'quarterlyReports' not in response_json:
+        name_of_reports = 'quarterlyEarnings'
+        if 'quarterlyEarnings' not in response_json:
+            raise KeyError(f" Sprawdź czy firma jest dostępna w alpha vantage. Nie znaleziono: {key_name}, "
+                           f"dla symbolu: {symbol}, w funkcji: {function_name}")
+
+    quarterly_reports = response_json[name_of_reports]
     parameter_quarterly_values = {}
     previous_value = 0
 
@@ -30,7 +40,7 @@ def get_quarterly_data_from_alpha_vantage(symbol, start_year, function_name, ALP
     return parameter_daily_values
 
 
-def quarterly_to_daily(quarterly_data, previous_value, trading_days, isDividends):
+def quarterly_to_daily(quarterly_data, previous_value, trading_days, is_dividends):
     """
     The first value is retrieved in advance from the api, the next ones are checked one by one by date,
     if the first known date is 2025-10-31 and the second is 2025-12-31, then the list between these dates
@@ -42,13 +52,12 @@ def quarterly_to_daily(quarterly_data, previous_value, trading_days, isDividends
 
     quarter_dates = {key: value for key, value in quarterly_data.items()}
 
-    current_value = 0 if isDividends else previous_value
+    current_value = 0 if is_dividends else previous_value
 
     for i, current_date in enumerate(trading_days):
         if current_date in quarter_dates:
             current_value = quarter_dates[current_date]
-        if isDividends:
-            print(current_value)
+        if is_dividends:
             daily_data[i] = current_value
             current_value = 0
         else:
@@ -66,7 +75,6 @@ def adjust_quarterly_dates_to_trading_days(quarterly_data, trading_days):
     """
     adjusted_data = {}
     trading_days = pd.Series(trading_days)
-    print("Typ: ", type(quarterly_data))
 
     for report_date, value in quarterly_data.items():
         report_date = pd.Timestamp(report_date)

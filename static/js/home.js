@@ -4,7 +4,7 @@ $(document).ready(function () {
         if (!companySymbol) return;
 
         // Clearing and disabling year selection fields before querying
-        $('#startYear, #endYear').empty().append('<option value="" selected disabled>Загрузка...</option>').prop('disabled', true);
+        $('#startYear, #endYear').empty().append('<option value="" selected disabled>Ładowanie...</option>').prop('disabled', true);
 
         // Sending the request to the server
         $.ajax({
@@ -15,8 +15,16 @@ $(document).ready(function () {
 
                 // Fill in the year fields
                 $('#startYear, #endYear').empty().append('<option value="" selected disabled>Wybierz rok</option>');
-                years.forEach(year => {
-                    $('#startYear, #endYear').append(`<option value="${year}">${year}</option>`);
+                years.forEach((year, index) => {
+                    if (index === 0) {
+                        $('#startYear, #endYear').append(`<option value="${year}" disabled>${year}</option>`);
+                    } else if (index === years.length - 1) {
+                        $('#startYear').append(`<option value="${year}" disabled>${year}</option>`);
+                        $('#endYear').append(`<option value="${year}" selected>${year}</option>`);
+                    } else {
+                        $('#startYear').append(`<option value="${year}">${year}</option>`);
+                        $('#endYear').append(`<option value="${year}" disabled>${year}</option>`);
+                    }
                 });
 
                 // Enable date selection
@@ -30,14 +38,14 @@ $(document).ready(function () {
     });
 
     $('#generateButton').on('click', function () {
-        //Collecting all data about company from fields
+        // Collecting all data about company from fields
         const selectedCompany = $('#companySelect').val();
         const startYear = $('#startYear').val();
         const endYear = $('#endYear').val();
         const selectedParametres = $('#parameters').val();
 
         if (selectedCompany == null || startYear == null || endYear == null || selectedParametres == null) {
-            alert ('Wypełnij wszystkie pola');
+            alert('Wypełnij wszystkie pola');
             return;
         }
 
@@ -46,21 +54,29 @@ $(document).ready(function () {
             startYear: startYear,
             endYear: endYear,
             parameters: selectedParametres
-        }
+        };
+
+        // Clearing error messages
+        $('#error-message').hide().text('');
 
         $.ajax({
             url: '/predict',
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(requestData),
-            success: function (response){
-                alert('Otrzymano odpowiedz od serwera: ' + response);
+            success: function (response) {
+                alert('Otrzymano odpowiedź od serwera: ' + JSON.stringify(response));
             },
-            error: function (error) {
-                console.error('Error: ' + error);
-                alert('Podczas przetwarzania danych wystąpił błąd. Opis: ' + error);
+            error: function (xhr) {
+                let errorMessage = "";
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage += xhr.responseJSON.error;
+                } else {
+                    errorMessage += ' Status: ' + xhr.status + ' (' + xhr.statusText + ')';
+                }
+                // Displaying error message on the page
+                $('#error-message').text(errorMessage).show();
             }
-        })
-
-    })
+        });
+    });
 });

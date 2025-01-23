@@ -2,7 +2,6 @@ import os
 import requests
 from flask import Blueprint, render_template, jsonify
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 
 from apps.predict import api_requests
 
@@ -13,8 +12,8 @@ ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
 @home_bp.route('/')
 def home():
-    stock_prices, trading_days = api_requests.get_stock_prices("IBM", 2000)
-    api_requests.get_dividends("IBM", 2000, trading_days)
+    #stock_prices, trading_days = api_requests.get_stock_prices("IBM", 2000)
+    #api_requests.get_dividends("IBM", 2000, trading_days)
     return render_template('home.html', title="Praca Dyplomowa",
                            dividendsCalendarCompanies=get_nearest_companies(),
                            allCompanies=get_all_companies())

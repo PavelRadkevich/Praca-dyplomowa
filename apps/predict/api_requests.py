@@ -19,7 +19,7 @@ def get_stock_prices(symbol, start_year):
     time_series_daily = response.json()['Time Series (Daily)']
     time_series_df = pd.DataFrame.from_dict(time_series_daily, orient='index')
     time_series_df.index = pd.to_datetime(time_series_df.index).tz_localize(None)
-    time_series_df = time_series_df[time_series_df.index.year >= start_year]
+    time_series_df = time_series_df[time_series_df.index.year >= int(start_year)]
     time_series_df = time_series_df[['4. close']]
     time_series_df = time_series_df.rename(columns={'4. close': 'value'})
 
@@ -121,17 +121,10 @@ def get_earnings_per_share(symbol, start_year, trading_days):
     return earnings_per_share
 
 
-def get_free_cash_flow(symbol, start_year, trading_days):
-    free_cash_flow_values = utils.get_quarterly_data_from_alpha_vantage(symbol, start_year,
-                                                                        'CASH_FLOW',
-                                                                        ALPHA_VANTAGE_KEY, 'freeCashFlow',
-                                                                        trading_days)
-    return free_cash_flow_values
-
-
 def get_current_ratio(symbol, start_year, trading_days):
-    total_assets = np.array(get_total_assets(symbol, start_year, trading_days))
-    total_debt = np.array(get_total_debt(symbol, start_year, trading_days))
+    total_assets = np.array(get_total_assets(symbol, start_year, trading_days), dtype=float)
+    total_debt = np.array(get_total_debt(symbol, start_year, trading_days), dtype=float)
+
     total_current_ratio = total_assets / total_debt
 
     return total_current_ratio

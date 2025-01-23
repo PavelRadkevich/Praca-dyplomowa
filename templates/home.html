@@ -51,7 +51,7 @@
                 <div class="box">
                     <label for="parameters" class="form-label">Wybierz parametry:</label>
                     <select id="parameters" class="form-select" multiple="multiple">
-                        <option value="EBITDA">EBITDA</option>
+                        <option value="ebitda">EBITDA</option>
                         <option value="total_debt">Zadłużenie (Total Debt)</option>
                         <option value="total_revenue">Przychody (Total Revenue)</option>
                         <option value="net_income">Zysk (Net Income)</option>
@@ -59,12 +59,13 @@
                         <option value="total_assets">Aktywy ogółem (Total Assets)</option>
                         <option value="operating_income">Dochód operacyjny (Operating Income)</option>
                         <option value="earnings_per_share">Zysk na akcję (Earnings Per Share)</option>
-                        <option value="free_cash_flow">Wolne przepływy pieniężne (Free Cash Flow)</option>
                         <option value="current_ratio">Bieżąca płynność finansowa (Current Ratio)</option>
                     </select>
                 </div>
             </div>
         </div>
+
+        <div id="error-message" style="color: red; display: none;"></div>
 
         <div class="container d-flex justify-content-center my-4">
             <button class="btn btn-warning btn-lg" id="generateButton">Generuj</button>
