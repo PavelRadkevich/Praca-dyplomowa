@@ -18,12 +18,14 @@ $(document).ready(function () {
                 years.forEach((year, index) => {
                     if (index === 0) {
                         $('#startYear, #endYear').append(`<option value="${year}" disabled>${year}</option>`);
+                    } else if (index === 1) {
+                        $('#endYear').append(`<option value="${year}" disabled>${year}</option>`);
+                        $('#startYear').append(`<option value="${year}">${year}</option>`);
                     } else if (index === years.length - 1) {
                         $('#startYear').append(`<option value="${year}" disabled>${year}</option>`);
-                        $('#endYear').append(`<option value="${year}" selected>${year}</option>`);
+                        $('#endYear').append(`<option value="${year}">${year}</option>`);
                     } else {
-                        $('#startYear').append(`<option value="${year}">${year}</option>`);
-                        $('#endYear').append(`<option value="${year}" disabled>${year}</option>`);
+                        $('#startYear, #endYear').append(`<option value="${year}">${year}</option>`);
                     }
                 });
 

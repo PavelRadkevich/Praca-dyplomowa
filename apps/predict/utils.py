@@ -3,7 +3,7 @@ import yfinance as yf
 import pandas as pd
 
 
-def get_quarterly_data_from_alpha_vantage(symbol, start_year, function_name, ALPHA_VANTAGE_KEY, key_name, trading_days):
+def get_quarterly_data_from_alpha_vantage(symbol, start_year, end_year, function_name, ALPHA_VANTAGE_KEY, key_name, trading_days):
     """
     Universal method for retrieving data from quarterly reports.
     :param symbol: company symbol
@@ -30,9 +30,9 @@ def get_quarterly_data_from_alpha_vantage(symbol, start_year, function_name, ALP
 
     for report in quarterly_reports:
         fiscal_year = int(report.get('fiscalDateEnding', '0000')[:4])
-        if start_year <= fiscal_year:
+        if start_year <= fiscal_year <= end_year:
             parameter_quarterly_values[report.get('fiscalDateEnding')] = report.get(key_name)
-        elif previous_value == 0:
+        elif previous_value == 0 and fiscal_year < start_year:
             previous_value = report.get(key_name)
 
     parameter_daily_values = quarterly_to_daily(parameter_quarterly_values, previous_value, trading_days, False)
@@ -99,13 +99,14 @@ def adjust_split_to_trading_day(date, trading_days):
     return date
 
 
-def consider_splits(symbol, start_year, data_df, trading_days, isDividend):
+def consider_splits(symbol, start_year, end_year, data_df, trading_days, isDividend):
     # Take all the splits, and leave only the ones greater than start_year.
     ticker = yf.Ticker(symbol)
     splits = ticker.splits
     splits.index = pd.to_datetime(splits.index).tz_localize(None)
     start_date = pd.Timestamp(f"{start_year}-01-01")
     filtered_splits = splits[splits.index >= start_date]
+    filtered_splits = splits[splits.index <= end_year]
 
     data_df = data_df.copy()
     data_df['value'] = pd.to_numeric(data_df['value'], errors='coerce')
@@ -128,12 +129,13 @@ def consider_splits(symbol, start_year, data_df, trading_days, isDividend):
     return data_df
 
 
-def restore_splits(symbol, start_year, data_df):
+def restore_splits(symbol, start_year, end_year, data_df):
     ticker = yf.Ticker(symbol)
     splits = ticker.splits
     splits.index = pd.to_datetime(splits.index).tz_localize(None)
     start_date = pd.Timestamp(f"{start_year}-01-01")
     filtered_splits = splits[splits.index >= start_date]
+    filtered_splits = filtered_splits[splits.index <= end_year]
 
     data_df = data_df.copy()
     data_df['value'] = pd.to_numeric(data_df['value'], errors='coerce')
