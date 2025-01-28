@@ -25,16 +25,17 @@ def predict():
         data = request.get_json()
         symbol = data['company']
         start_year = data['startYear']
+        end_year = data['endYear']
         parameters = data['parameters']
 
-        stock_prices, trading_days = all_methods["get_stock_prices"](symbol, start_year)
+        stock_prices, trading_days = all_methods["get_stock_prices"](symbol, start_year, end_year)
 
         results = {}
         for param in parameters:
             method_name = f'get_{param}'
             if method_name in all_methods:
                 try:
-                    results[param] = all_methods[method_name](symbol, int(start_year), trading_days)
+                    results[param] = all_methods[method_name](symbol, int(start_year), int(end_year), trading_days)
                     if type(results[param]) is not list:
                         results[param] = results[param].tolist()
                 except KeyError as ke:
