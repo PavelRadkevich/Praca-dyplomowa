@@ -105,8 +105,9 @@ def consider_splits(symbol, start_year, end_year, data_df, trading_days, isDivid
     splits = ticker.splits
     splits.index = pd.to_datetime(splits.index).tz_localize(None)
     start_date = pd.Timestamp(f"{start_year}-01-01")
+    end_date = pd.Timestamp(f"{end_year}-01-01")
     filtered_splits = splits[splits.index >= start_date]
-    filtered_splits = splits[splits.index <= end_year]
+    filtered_splits = splits[filtered_splits.index <= end_date]
 
     data_df = data_df.copy()
     data_df['value'] = pd.to_numeric(data_df['value'], errors='coerce')
@@ -120,29 +121,28 @@ def consider_splits(symbol, start_year, end_year, data_df, trading_days, isDivid
             else:
                 continue
     else:
+        # If split happens after start_date, we correct all next values
         for split_date, split_ratio in filtered_splits.items():
-            adjust_split_to_trading_day(split_date, trading_days)
-            # If split happens after start_date, we correct all next values
-            if split_date in data_df.index:
-                data_df.loc[split_date:, 'value'] /= split_ratio
+            split_date = adjust_split_to_trading_day(split_date, trading_days)
+            data_df.loc[split_date:, 'value'] /= split_ratio
 
     return data_df
 
 
-def restore_splits(symbol, start_year, end_year, data_df):
+def restore_splits(symbol, start_year, end_year, data_df, trading_days):
     ticker = yf.Ticker(symbol)
     splits = ticker.splits
     splits.index = pd.to_datetime(splits.index).tz_localize(None)
     start_date = pd.Timestamp(f"{start_year}-01-01")
+    end_date = pd.Timestamp(f"{end_year}-01-01")
     filtered_splits = splits[splits.index >= start_date]
-    filtered_splits = filtered_splits[splits.index <= end_year]
+    filtered_splits = filtered_splits[splits.index <= end_date]
 
     data_df = data_df.copy()
     data_df['value'] = pd.to_numeric(data_df['value'], errors='coerce')
 
     for split_date, split_ratio in filtered_splits.items():
-        # If split happens after start_date, we correct all next values
-        if split_date in data_df.index:
-            data_df.loc[split_date:, 'value'] *= split_ratio
+        split_date = adjust_split_to_trading_day(split_date, trading_days)
+        data_df.loc[split_date:, 'value'] *= split_ratio
 
     return data_df

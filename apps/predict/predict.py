@@ -10,6 +10,8 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense, Input
 from sklearn.preprocessing import MinMaxScaler
 
+from apps.predict import utils
+
 # Get all methods from api_requests
 all_methods = {
     name: func
@@ -28,7 +30,10 @@ def predict():
         end_year = data['endYear']
         parameters = data['parameters']
 
-        stock_prices, trading_days = all_methods["get_stock_prices"](symbol, start_year, end_year)
+        #stock_prices, trading_days = all_methods["get_stock_prices"](symbol, start_year, end_year)
+        #dividends = all_methods["get_dividends"](symbol, start_year, end_year, trading_days)
+
+        stock_prices, trading_days, dividends = all_methods["get_stock_data_with_dividends"](symbol, start_year, end_year)
 
         results = {}
         for param in parameters:
@@ -51,55 +56,48 @@ def predict():
         if len(stock_prices) != len(value):
             return jsonify({"error": "Parameter lengths do not match"}), 500
 
-
-
     # Преобразуем данные для LSTM
-    stock_prices = np.array(stock_prices).reshape(-1, 1)
+    stock_prices = np.array(stock_prices, dtype=float).reshape(-1, 1)
+    dividends = np.array(dividends, dtype=float).reshape(-1, 1)
     print("stock_prices reshape:", stock_prices)
     # Сохраняем все параметры в одном массиве
     additional_features = np.column_stack(
-        [np.array(results[param]).reshape(-1, 1) for param in parameters]
+        [np.array(results[param], dtype=float).reshape(-1, 1) for param in parameters]
     )
     # Объединяем цены акций с другими параметрами
-    all_features = np.hstack((stock_prices, additional_features))
-    print("all_featurs: ", all_features)
-    # Масштабируем все данные
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_features = scaler.fit_transform(all_features)
-    print("scaled: ", scaled_features)
+    all_features = np.hstack((stock_prices, dividends, additional_features))
+    print("all_features: ", all_features)
+
     # Создаём временные окна (time steps) для LSTM
     time_step = 60  # Длина временного окна
-    X, y = [], []
-    for i in range(len(scaled_features) - time_step - 1):
-        X.append(scaled_features[i:(i + time_step), :])  # Все признаки
-        y.append(scaled_features[i + time_step, 0])  # Цены акций
-    X, y = np.array(X), np.array(y)
-    # Изменяем форму для LSTM
-    X = X.reshape(X.shape[0], X.shape[1], X.shape[2])
-    print("X: ", X)
-    print("Y: ", y)
-    # Создаём LSTM-модель
+
+    X, y_30, y_60, y_90 = [], [], [], []
+    for i in range(len(all_features) - time_step - 90):
+        X.append(all_features[i:i + time_step, :])
+        y_30.append(int(stock_prices[i + time_step + 30] > stock_prices[i + time_step]))
+        y_60.append(int(stock_prices[i + time_step + 60] > stock_prices[i + time_step]))
+        y_90.append(int(stock_prices[i + time_step + 90] > stock_prices[i + time_step]))
+
+    X, y_30, y_60, y_90 = np.array(X), np.array(y_30), np.array(y_60), np.array(y_90)
+
     model = Sequential([
-        Input(shape=(time_step, X.shape[2])),  # Учитываем все признаки
+        Input(shape=(time_step, X.shape[2])),
         LSTM(50, return_sequences=True),
         LSTM(50, return_sequences=False),
-        Dense(25),
-        Dense(1)
+        Dense(25, activation='relu'),
+        Dense(3, activation='sigmoid')  # Три выхода: 30, 60, 90 дней
     ])
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    # Обучение модели
-    model.fit(X, y, batch_size=1, epochs=1, verbose=0)
-    # Предсказания на основе модели
+
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.fit(X, [y_30, y_60, y_90], batch_size=32, epochs=50, validation_split=0.2)
+
     predictions = model.predict(X)
-    # Обратное преобразование предсказаний в исходный масштаб
-    predictions = scaler.inverse_transform(
-        np.hstack((predictions, np.zeros((predictions.shape[0], all_features.shape[1] - 1))))
-    )[:, 0].flatten().tolist()  # Берём только цены акций
-    print("Predictions: ", predictions)
-    # Добавляем результат предсказаний в response
-    results['predicted_prices'] = predictions
+    results['predicted_probabilities'] = {
+        "30_days": predictions[0].tolist(),
+        "60_days": predictions[1].tolist(),
+        "90_days": predictions[2].tolist()
+    }
 
-
-
+    print(results)
 
     return jsonify(results), 200
