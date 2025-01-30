@@ -10,18 +10,18 @@ import yfinance as yf
 ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY")
 
+
 def get_stock_data_with_dividends(symbol, start_year, end_year):
     stock_df, trading_days = get_stock_prices(symbol, start_year, end_year)
+    dividends, last_dividend_date = get_dividends(symbol, start_year, end_year, trading_days)
+    last_dividend_date = pd.Timestamp(last_dividend_date)
 
-    dividends = get_dividends(symbol, start_year, end_year, trading_days)
+    last_nonzero_idx = max(i for i, val in enumerate(dividends) if val != 0)
 
-    last_dividend_date = max(dividends.keys())
-
-    trading_days = [day for day in trading_days if day <= last_dividend_date]
-
-    stock_df = stock_df.loc[stock_df.index <= last_dividend_date]
-
-    dividends = {date: amount for date, amount in dividends.items() if date <= last_dividend_date}
+    # Обрежем список до этого момента
+    dividends = dividends[: last_nonzero_idx + 1]
+    trading_days = trading_days[: last_nonzero_idx + 1]
+    stock_df = stock_df.iloc[: last_nonzero_idx + 1]
 
     return stock_df, trading_days, dividends
 
@@ -42,9 +42,7 @@ def get_stock_prices(symbol, start_year, end_year):
     time_series_df = time_series_df[::-1]  # Reverse
 
     trading_days = time_series_df.index.tolist()
-
     time_series_df = utils.consider_splits(symbol, start_year, end_year, time_series_df, trading_days, False)
-
     return time_series_df, trading_days
 
 
@@ -61,19 +59,20 @@ def get_dividends(symbol, start_year, end_year, trading_days):
     df.set_index('date', inplace=True)
     df = df.rename(columns={'amount': 'value'})
 
-    df_before_start_year = df[df.index.year < start_year]
+    df_before_start_year = df[df.index.year < int(start_year)]
     last_date_before_start = df_before_start_year.index.max()
     previous_value = df_before_start_year.loc[last_date_before_start, 'value']
 
-    df = df[df.index.year >= start_year]
-    df = df[df.index_year <= end_year]
+    df = df[df.index.year >= int(start_year)]
+    df = df[df.index.year <= int(end_year)]
 
     dividends_splits = utils.consider_splits(symbol, start_year, end_year, df, trading_days, True)
+
     dividends_splits_dict = {str(index): float(row['value']) for index, row in dividends_splits.iterrows()}
 
-    dividends_daily = utils.quarterly_to_daily(dividends_splits_dict, previous_value, trading_days, True)
+    last_dividend_date = max(dividends_splits_dict.keys())
 
-    last_dividend_date = max(dividends_daily.keys())
+    dividends_daily = utils.quarterly_to_daily(dividends_splits_dict, previous_value, trading_days, True)
 
     return dividends_daily, last_dividend_date
 
@@ -83,7 +82,6 @@ def get_ebitda(symbol, start_year, end_year, trading_days):
                                                                 'INCOME_STATEMENT',
                                                                 ALPHA_VANTAGE_KEY, 'ebitda',
                                                                 trading_days)
-    print('EBITDA: ', ebitda_values)
     return ebitda_values
 
 

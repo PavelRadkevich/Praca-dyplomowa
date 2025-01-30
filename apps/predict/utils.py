@@ -101,15 +101,18 @@ def adjust_split_to_trading_day(date, trading_days):
 
 def consider_splits(symbol, start_year, end_year, data_df, trading_days, isDividend):
     # Take all the splits, and leave only the ones greater than start_year.
+    if data_df is None or data_df.empty:
+        raise ValueError("data_df is None or empty")
+    if 'value' not in data_df.columns:
+        raise KeyError("Column 'value' is missing in data_df")
     ticker = yf.Ticker(symbol)
     splits = ticker.splits
     splits.index = pd.to_datetime(splits.index).tz_localize(None)
     start_date = pd.Timestamp(f"{start_year}-01-01")
     end_date = pd.Timestamp(f"{end_year}-01-01")
     filtered_splits = splits[splits.index >= start_date]
-    filtered_splits = splits[filtered_splits.index <= end_date]
+    filtered_splits = filtered_splits[filtered_splits.index <= end_date]
 
-    data_df = data_df.copy()
     data_df['value'] = pd.to_numeric(data_df['value'], errors='coerce')
 
     if isDividend:

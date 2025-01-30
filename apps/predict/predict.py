@@ -1,16 +1,16 @@
-from datetime import datetime
+import logging
 
 import numpy as np
 from flask import Blueprint, jsonify, request
 
 import inspect
+
+from flask_socketio import emit
+
 import apps.predict.api_requests
 
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Input
-from sklearn.preprocessing import MinMaxScaler
-
-from apps.predict import utils
 
 # Get all methods from api_requests
 all_methods = {
@@ -32,9 +32,8 @@ def predict():
 
         #stock_prices, trading_days = all_methods["get_stock_prices"](symbol, start_year, end_year)
         #dividends = all_methods["get_dividends"](symbol, start_year, end_year, trading_days)
-
+        emit('progres', {'status': 'Ładujemy ceny akcji i dywidendy...'})
         stock_prices, trading_days, dividends = all_methods["get_stock_data_with_dividends"](symbol, start_year, end_year)
-
         results = {}
         for param in parameters:
             method_name = f'get_{param}'
@@ -59,14 +58,12 @@ def predict():
     # Преобразуем данные для LSTM
     stock_prices = np.array(stock_prices, dtype=float).reshape(-1, 1)
     dividends = np.array(dividends, dtype=float).reshape(-1, 1)
-    print("stock_prices reshape:", stock_prices)
     # Сохраняем все параметры в одном массиве
     additional_features = np.column_stack(
         [np.array(results[param], dtype=float).reshape(-1, 1) for param in parameters]
     )
     # Объединяем цены акций с другими параметрами
     all_features = np.hstack((stock_prices, dividends, additional_features))
-    print("all_features: ", all_features)
 
     # Создаём временные окна (time steps) для LSTM
     time_step = 60  # Длина временного окна
@@ -79,7 +76,7 @@ def predict():
         y_90.append(int(stock_prices[i + time_step + 90] > stock_prices[i + time_step]))
 
     X, y_30, y_60, y_90 = np.array(X), np.array(y_30), np.array(y_60), np.array(y_90)
-
+    y = np.column_stack([y_30, y_60, y_90])
     model = Sequential([
         Input(shape=(time_step, X.shape[2])),
         LSTM(50, return_sequences=True),
@@ -89,15 +86,27 @@ def predict():
     ])
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(X, [y_30, y_60, y_90], batch_size=32, epochs=50, validation_split=0.2)
+    model.fit(X, y, batch_size=32, epochs=1, validation_split=0.2)
 
-    predictions = model.predict(X)
-    results['predicted_probabilities'] = {
-        "30_days": predictions[0].tolist(),
-        "60_days": predictions[1].tolist(),
-        "90_days": predictions[2].tolist()
-    }
+    last_window = all_features[-time_step:].tolist()
 
-    print(results)
+    # Для одного предсказания (не сдвигая окно)
+    future_predictions = {"30_days": [], "60_days": [], "90_days": []}
 
-    return jsonify(results), 200
+    # Преобразуем в нужную форму (1, time_step, features)
+    input_data = np.array(last_window).reshape(1, time_step, X.shape[2])
+
+    # Получаем одно предсказание модели для каждого периода
+    predicted_prob = model.predict(input_data)[0]
+
+    # Сохраняем только первое предсказание для каждого периода времени
+    future_predictions["30_days"].append(predicted_prob[0].tolist())
+    future_predictions["60_days"].append(predicted_prob[1].tolist())
+    future_predictions["90_days"].append(predicted_prob[2].tolist())
+
+    # Добавляем будущие предсказания в результаты
+    results["future_predictions"] = future_predictions
+
+    print(future_predictions)
+
+    return jsonify(future_predictions), 200

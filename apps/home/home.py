@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from apps.predict import api_requests
 
-home_bp = Blueprint('home', __name__, template_folder='../../templates')
+home_bp = Blueprint('home', __name__, template_folder='templates')
 FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY")
 ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 

@@ -10,6 +10,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 
     <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </head>
@@ -71,24 +72,26 @@
             <button class="btn btn-warning btn-lg" id="generateButton">Generuj</button>
         </div>
 
+        <div id="progress" style="color: blue; display: none;"></div>
+
         <!-- Probabilities and ROC-AUC -->
         <div class="row">
             <div class="col-md-3">
                 <div class="box text-center">
                     <h5>Prawdopodobieństwo 30 dni:</h5>
-                    <div class="stat-number">...</div>
+                    <div id="30_days" class="stat-number">...</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="box text-center">
                     <h5>Prawdopodobieństwo 60 dni:</h5>
-                    <div class="stat-number">...</div>
+                    <div id="60_days" class="stat-number">...</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="box text-center">
                     <h5>Prawdopodobieństwo 90 dni:</h5>
-                    <div class="stat-number">...</div>
+                    <div id="90_days" class="stat-number">...</div>
                 </div>
             </div>
             <div class="col-md-3">

@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    const socket = io.connect('http://127.0.0.1:5000'); // Убедитесь, что адрес правильный
     $('#companySelect').on('change', function () {
         const companySymbol = $(this).val();
         if (!companySymbol) return;
@@ -67,7 +68,16 @@ $(document).ready(function () {
             contentType: 'application/json',
             data: JSON.stringify(requestData),
             success: function (response) {
-                alert('Otrzymano odpowiedź od serwera: ' + JSON.stringify(response));
+                alert('Otrzymano');
+
+                value_30 = (parseFloat(response['30_days']) * 100).toFixed(2);
+                value_60 = (parseFloat(response['60_days']) * 100).toFixed(2);
+                value_90 = (parseFloat(response['90_days']) * 100).toFixed(2);
+
+                // Вставляем результат в div с id "30_days"
+                $('#30_days').text(value_30 + "%");
+                $('#60_days').text(value_60 + "%");
+                $('#90_days').text(value_90 + "%");
             },
             error: function (xhr) {
                 let errorMessage = "";
@@ -80,5 +90,10 @@ $(document).ready(function () {
                 $('#error-message').text(errorMessage).show();
             }
         });
+    });
+
+    socket.on('progress', function(data) {
+        console.log(data.status);
+        $('#progress').text(data.status); // Выводим статус прогресса на странице
     });
 });
