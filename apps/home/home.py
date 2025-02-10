@@ -1,9 +1,8 @@
 import os
-import requests
-from flask import Blueprint, render_template, jsonify
-from bs4 import BeautifulSoup
 
-from apps.predict import api_requests
+import requests
+from bs4 import BeautifulSoup
+from flask import Blueprint, render_template, jsonify
 
 home_bp = Blueprint('home', __name__, template_folder='templates')
 FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY")
@@ -12,8 +11,6 @@ ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
 @home_bp.route('/')
 def home():
-    #stock_prices, trading_days = api_requests.get_stock_prices("IBM", 2000)
-    #api_requests.get_dividends("IBM", 2000, trading_days)
     return render_template('home.html', title="Praca Dyplomowa",
                            dividendsCalendarCompanies=get_nearest_companies(),
                            allCompanies=get_all_companies())
@@ -53,7 +50,6 @@ def get_nearest_companies():
     dividends_table = soup.find('table', {'id': 'dividendsCalendarData'})
     companies = []
 
-    # TODO: Фильтрация по размеру дивиденд (проценты и volume?) чтобы убрать слишком маленькие фирмы. Найти правильный сайт
     if dividends_table:
         body = dividends_table.find('tbody')
         rows = body.find_all('tr')

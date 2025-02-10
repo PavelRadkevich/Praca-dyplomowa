@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    const socket = io.connect('http://127.0.0.1:5000'); // Убедитесь, что адрес правильный
+    const socket = io.connect('http://127.0.0.1:5000');
     $('#companySelect').on('change', function () {
         const companySymbol = $(this).val();
         if (!companySymbol) return;
@@ -59,8 +59,21 @@ $(document).ready(function () {
             parameters: selectedParametres
         };
 
-        // Clearing error messages
+        // Clearing
         $('#error-message').hide().text('');
+        $('#progress').text('').css('color', 'blue').show();
+        $('#last_dividend_date').text('...');
+        $('#30_days').text('...');
+        $('#60_days').text('...');
+        $('#90_days').text('...');
+        $('#loss').text('Loss: ...')
+        $('#accuracy').text('Accuracy: ...')
+        $('#precision').text('Precision: ...')
+        $('#recall').text('Recall: ...')
+        $('#auc').text('AUC: ...')
+        $('#f1').text('F1: ...')
+        $('#roc_auc_image').attr('src', '');
+        $('#train_test_image').attr('src', '')
 
         $.ajax({
             url: '/predict',
@@ -68,16 +81,32 @@ $(document).ready(function () {
             contentType: 'application/json',
             data: JSON.stringify(requestData),
             success: function (response) {
-                alert('Otrzymano');
+                $('#progress').text('Gotowe').css('color', 'green').show();
+                $('#progress').text('Gotowe').show()
 
                 value_30 = (parseFloat(response['30_days']) * 100).toFixed(2);
                 value_60 = (parseFloat(response['60_days']) * 100).toFixed(2);
                 value_90 = (parseFloat(response['90_days']) * 100).toFixed(2);
 
-                // Вставляем результат в div с id "30_days"
+                loss = (parseFloat(response['loss']) * 100).toFixed(2);
+                accuracy = (parseFloat(response['accuracy']) * 100).toFixed(2);
+                precision = (parseFloat(response['precision']) * 100).toFixed(2);
+                recall = (parseFloat(response['recall']) * 100).toFixed(2);
+                auc = (parseFloat(response['auc']) * 100).toFixed(2);
+                f1 = (parseFloat(response['f1']) * 100).toFixed(2);
+
                 $('#30_days').text(value_30 + "%");
                 $('#60_days').text(value_60 + "%");
                 $('#90_days').text(value_90 + "%");
+                $('#roc_auc_image').attr('src', response['roc_auc_url']);
+                $('#train_test_image').attr('src', response['train_test_url'])
+
+                $('#loss').text('Loss: ' + loss + '%')
+                $('#accuracy').text('Accuracy: ' + accuracy + '%')
+                $('#precision').text('Precision: ' + precision + '%')
+                $('#recall').text('Recall: ' + recall + '%')
+                $('#auc').text('AUC: ' + auc + '%')
+                $('#f1').text('F1: ' + f1 + '%')
             },
             error: function (xhr) {
                 let errorMessage = "";
@@ -93,7 +122,10 @@ $(document).ready(function () {
     });
 
     socket.on('progress', function(data) {
-        console.log(data.status);
-        $('#progress').text(data.status); // Выводим статус прогресса на странице
+        $('#progress').text(data.status).show();
+    });
+
+    socket.on('last_date', function(data) {
+        $('#last_dividend_date').text(data.status);
     });
 });

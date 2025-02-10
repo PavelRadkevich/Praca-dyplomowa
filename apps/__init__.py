@@ -12,5 +12,5 @@ def create_app():
     app.register_blueprint(home_bp)
     app.register_blueprint(predict_bp)
 
-    socketio.init_app(app)
+    socketio.init_app(app,  cors_allowed_origins="*")
     return app

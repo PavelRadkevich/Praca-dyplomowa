@@ -1,11 +1,10 @@
-import json
 import os
 
-import requests
-import apps.predict.utils as utils
 import numpy as np
 import pandas as pd
-import yfinance as yf
+import requests
+
+import apps.predict.utils as utils
 
 ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
 FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY")
@@ -18,12 +17,12 @@ def get_stock_data_with_dividends(symbol, start_year, end_year):
 
     last_nonzero_idx = max(i for i, val in enumerate(dividends) if val != 0)
 
-    # Обрежем список до этого момента
+    # Trim the list up to this point
     dividends = dividends[: last_nonzero_idx + 1]
     trading_days = trading_days[: last_nonzero_idx + 1]
     stock_df = stock_df.iloc[: last_nonzero_idx + 1]
 
-    return stock_df, trading_days, dividends
+    return stock_df, trading_days, dividends, last_dividend_date
 
 
 # Return stock prices without splits
@@ -61,21 +60,40 @@ def get_dividends(symbol, start_year, end_year, trading_days):
 
     df_before_start_year = df[df.index.year < int(start_year)]
     last_date_before_start = df_before_start_year.index.max()
-    previous_value = df_before_start_year.loc[last_date_before_start, 'value']
+    previous_value = 0
 
     df = df[df.index.year >= int(start_year)]
     df = df[df.index.year <= int(end_year)]
 
     dividends_splits = utils.consider_splits(symbol, start_year, end_year, df, trading_days, True)
-
     dividends_splits_dict = {str(index): float(row['value']) for index, row in dividends_splits.iterrows()}
-
     last_dividend_date = max(dividends_splits_dict.keys())
-
     dividends_daily = utils.quarterly_to_daily(dividends_splits_dict, previous_value, trading_days, True)
-
     return dividends_daily, last_dividend_date
 
+def get_volume(symbol, start_year, end_year, trading_days):
+    total_volume = utils.get_daily_data_from_alpha_vantage(symbol, start_year, end_year, trading_days,
+                                                           'TIME_SERIES_DAILY',
+                                                           ALPHA_VANTAGE_KEY, "5. volume")
+    return total_volume
+
+def get_open_price(symbol, start_year, end_year, trading_days):
+    open_price = utils.get_daily_data_from_alpha_vantage(symbol, start_year, end_year, trading_days,
+                                                          'TIME_SERIES_DAILY',
+                                                          ALPHA_VANTAGE_KEY, "1. open")
+    return open_price
+
+def get_low_price(symbol, start_year, end_year, trading_days):
+    low_price = utils.get_daily_data_from_alpha_vantage(symbol, start_year, end_year, trading_days,
+                                                         'TIME_SERIES_DAILY',
+                                                         ALPHA_VANTAGE_KEY, "3. low")
+    return low_price
+
+def get_high_price(symbol, start_year, end_year, trading_days):
+    high_price = utils.get_daily_data_from_alpha_vantage(symbol, start_year, end_year, trading_days,
+                                                          'TIME_SERIES_DAILY',
+                                                          ALPHA_VANTAGE_KEY, "2. high")
+    return high_price
 
 def get_ebitda(symbol, start_year, end_year, trading_days):
     ebitda_values = utils.get_quarterly_data_from_alpha_vantage(symbol, start_year, end_year,
@@ -145,6 +163,23 @@ def get_current_ratio(symbol, start_year, end_year, trading_days):
     total_assets = np.array(get_total_assets(symbol, start_year, end_year, trading_days), dtype=float)
     total_debt = np.array(get_total_debt(symbol, start_year, end_year, trading_days), dtype=float)
 
-    total_current_ratio = total_assets / total_debt
+    total_current_ratio = np.divide(total_assets, total_debt, out=np.zeros_like(total_assets), where=total_debt != 0)
 
     return total_current_ratio
+
+
+def get_daily_volatility(symbol, start_year, end_year, trading_days):
+    total_high = np.array(utils.get_daily_data_from_alpha_vantage(symbol, start_year, end_year, trading_days,
+                                                                  'TIME_SERIES_DAILY',
+                                                                  ALPHA_VANTAGE_KEY, "2. high"), dtype=float)
+    total_low = np.array(utils.get_daily_data_from_alpha_vantage(symbol, start_year, end_year, trading_days,
+                                                                 'TIME_SERIES_DAILY',
+                                                                 ALPHA_VANTAGE_KEY, "3. low"), dtype=float)
+    total_open = np.array(utils.get_daily_data_from_alpha_vantage(symbol, start_year, end_year, trading_days,
+                                                                  'TIME_SERIES_DAILY',
+                                                                  ALPHA_VANTAGE_KEY, "2. open"), dtype=float)
+    total_high_low = total_high - total_low
+    total_daily_volatility = np.divide(total_high_low, total_open, out=np.zeros_like(total_high_low),
+                                       where=total_open != 0)
+
+    return total_daily_volatility

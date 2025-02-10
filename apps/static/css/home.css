@@ -33,3 +33,26 @@ body {
 h5 {
     margin-bottom: 10px;
 }
+
+#progress {
+    color: blue;
+    display: none;
+    font-style: italic;
+}
+
+#error-message {
+    color: red;
+    display: none;
+}
+
+.highlight-box {
+    background-color: #f8f9fa;
+    border: 2px solid #ffc107;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
